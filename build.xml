@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="jar" name="openflow_gui">
+  <property name="debug"      value="true"/>
+  <property name="debuglevel" value="source,lines,vars"/>
+  <property name="target"     value="1.7"/>
+  <property name="source"     value="1.7"/>
+  <property name="bin.dir"    value="bin"/>
+  <property name="lib.dir"    value="lib"/>
+  <property name="jarfile"    value="openflow_gui.jar"/>
+  <property name="main-class" value="org.openflow.gui.OpenFlowGUI"/>
+
+  <path id="classpath">
+    <fileset dir="${lib.dir}" includes="*.jar"/>
+  </path>
+
+  <target name="init">
+    <mkdir dir="bin"/>
+    <copy includeemptydirs="false" todir="bin">
+      <fileset dir="src" excludes="**/*.launch, **/*.java"/>
+    </copy>
+    <mkdir dir="bin/images"/>
+    <copy includeemptydirs="false" todir="bin/images">
+      <fileset dir="images"/>
+    </copy>
+    <unzip dest="${bin.dir}">
+      <fileset dir="${lib.dir}" excludes="src/*.jar" includes="**/*.jar"/>
+    </unzip>
+    <delete dir="${bin.dir}/META-INF"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${bin.dir}"/>
+    <delete dir="nbdist"/>
+    <delete dir="nb_project/build"/>
+    <delete file="jnlp/dgu.gif"/>
+    <delete file="jnlp/${jarfile}"/>
+  </target>
+
+  <target name="build" depends="init">
+    <javac debug="${debug}" debuglevel="${debuglevel}" destdir="bin" source="${source}" target="${target}">
+      <src path="src"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="build">
+    <jar destfile="${bin.dir}/${jarfile}" filesetmanifest="mergewithoutmain">
+      <manifest>
+        <attribute name="Main-Class" value="${main-class}"/>
+        <attribute name="Class-Path" value="."/>
+      </manifest>
+      <fileset dir="bin" excludes="${jarfile}"/>
+    </jar>
+  </target>
+
+  <target name="run" depends="jar">
+    <java fork="true" classname="${main-class}">
+      <classpath>
+        <pathelement path="${bin.dir}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="javadoc">
+    <javadoc access="protected"
+             author="true"
+             classpath="lib/jcommon-1.0.15.jar;lib/jfreechart-1.0.12.jar;lib/jung2-layout-min.jar;lib/jyaml-1.3.dgu.jar"
+             destdir="doc"
+             doctitle="OpenFlow GUI"
+             nodeprecated="false"
+             nodeprecatedlist="false"
+             noindex="false"
+             nonavbar="false"
+             notree="false"
+             overview="src/overview.html"
+             source="1.6"
+             sourcepath="src"
+             splitindex="true"
+             use="true"
+             version="true"/>
+  </target>
+
+  <target name="keytoolexec" depends="jar">
+    <delete file="ofgkey"/>
+    <exec dir="." executable="keytool" failonerror="true">
+      <arg line="-genkeypair -alias ofg -keystore ofgkey -storepass ofgkey
+                 -keypass ofgkey -validity 365
+                 -dname 'CN=David Underhill, OU=McKeown Group, O=Stanford University, L=Stanford, ST=CA, C=US'"/>
+    </exec>
+  </target>
+
+  <target name="jarsignerexec" depends="keytoolexec">
+    <exec dir="." executable="jarsigner" failonerror="true">
+      <arg line="-keystore ofgkey -storepass ofgkey ${bin.dir}/${jarfile} ofg"/>
+    </exec>
+  </target>
+
+  <target name="web" depends="jarsignerexec">
+    <copy file="images/dgu.gif" todir="jnlp"/>
+    <copy file="${bin.dir}/${jarfile}" todir="jnlp"/>
+  </target>
+</project>
