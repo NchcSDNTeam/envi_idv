@@ -1,0 +1,14 @@
+#Fat Jar Configuration File
+#Mon Jun 27 13:41:02 CST 2011
+onejar.license.required=true
+manifest.classpath=
+manifest.removesigners=true
+onejar.checkbox=false
+jarname=openflow_gui.jar
+manifest.mergeall=true
+manifest.mainclass=org.openflow.gui.OpenFlowGUI
+manifest.file=<createnew>
+jarname.isextern=false
+onejar.expand=
+excludes=
+includes=
